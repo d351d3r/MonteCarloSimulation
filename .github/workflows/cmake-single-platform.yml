@@ -16,9 +16,15 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    # Setup C++ environment
-    - name: Set up C++ environment
-      uses: actions/setup-cpp@v2
+    # Setup Python for Conan
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.x' # Use the default Python 3.x version
+
+    # Install Conan
+    - name: Install Conan
+      run: pip install conan
 
     # Cache Conan packages to speed up build
     - name: Cache Conan packages
@@ -35,9 +41,7 @@ jobs:
 
     # Configure CMake
     - name: Configure CMake
-      # Note: We run `conan install` in the previous step which generates `conanbuildinfo.cmake` file
-      # We need to include this file in our CMake configuration by passing `-DCMAKE_MODULE_PATH`
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_MODULE_PATH=${GITHUB_WORKSPACE}
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     # Build
     - name: Build
