@@ -1,56 +1,64 @@
-name: C++ CI
+name: CMake
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ]
-
-env:
-  BUILD_TYPE: Release
+    branches: [ "main" ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        build_type: [Release]
+        c_compiler: [gcc, clang]
+        cpp_compiler: [g++, clang++]
+        include:
+          - os: ubuntu-latest
+            c_compiler: gcc
+            cpp_compiler: g++
+          - os: ubuntu-latest
+            c_compiler: clang
+            cpp_compiler: clang++
 
     steps:
     - uses: actions/checkout@v3
 
-    # Setup Python for Conan
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.x' # Use the default Python 3.x version
-
-    # Install Conan
-    - name: Install Conan
-      run: pip install conan
-
-    # Cache Conan packages to speed up build
-    - name: Cache Conan packages
-      uses: actions/cache@v3
-      with:
-        path: ~/.conan/data
-        key: ${{ runner.os }}-conan-${{ hashFiles('**/conanfile.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-conan-
-
-     # Install Conan dependencies
-    - name: Install Conan dependencies
+    - name: Install Dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
       run: |
-        conan profile new default --detect  # Создает профиль по умолчанию с автоопределением настроек
-        conan profile update settings.build_type=${{env.BUILD_TYPE}} default
-        conan install ${GITHUB_WORKSPACE} --build=missing
+        sudo apt update
+        sudo apt install -y python3-venv
+        # Setup Conan
+        python3 -m venv conan
+        source conan/bin/activate
+        pip install conan
+        conan profile detect  # Обнаружение и создание профиля по умолчанию
+        conan install . --build=missing
 
-    # Configure CMake
+    - name: Set reusable strings
+      id: strings
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_ENV"
+
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run: >
+        cmake ${{ steps.strings.outputs.build-output-dir }}
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -S ${{ github.workspace }}
 
-    # Build
+    - name: Change to build directory
+      run: cd ${{ steps.strings.outputs.build-output-dir }}
+
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build . --config ${{ matrix.build_type }}
 
-    # Run tests
     - name: Test
-      working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{env.BUILD_TYPE}}
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: ctest -C ${{ matrix.build_type }}
