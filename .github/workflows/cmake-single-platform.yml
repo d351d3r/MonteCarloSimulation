@@ -35,9 +35,12 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-conan-
 
-    # Install Conan dependencies
+     # Install Conan dependencies
     - name: Install Conan dependencies
-      run: conan install ${GITHUB_WORKSPACE} --build=missing
+      run: |
+        conan profile new default --detect  # Создает профиль по умолчанию с автоопределением настроек
+        conan profile update settings.build_type=${{env.BUILD_TYPE}} default
+        conan install ${GITHUB_WORKSPACE} --build=missing
 
     # Configure CMake
     - name: Configure CMake
