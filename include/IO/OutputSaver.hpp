@@ -1,19 +1,30 @@
-#ifndef OUTPUT_SAVER_HPP
-#define OUTPUT_SAVER_HPP
+#ifndef OUTPUTSAVER_HPP
+#define OUTPUTSAVER_HPP
 
-#include <vector>
+#include "IDataHandler.hpp"
+#include <fstream>
 #include <string>
+#include <vector>
 #include <mutex>
 
 namespace IO {
-    extern std::mutex csv_mutex;  // Mutex for thread-safe file operations
 
-    class OutputSaver {
-    public:
-        static void saveResults(const std::vector<double>& data);
-        static void saveToCSV(const std::vector<double>& data, const std::string& filename);
-        static void saveToDatabase(const std::vector<double>& data);
-    };
-}
+class OutputSaver : public IDataHandler {
+public:
+    explicit OutputSaver(const std::string& baseDirectory);
+    ~OutputSaver() override;
 
-#endif // OUTPUT_SAVER_HPP
+    std::vector<std::vector<std::string>> loadData(const std::string& filename) override;
+    void saveData(const std::vector<std::vector<std::string>>& data, const std::string& filename) override;
+
+private:
+    std::string baseDir;
+    mutable std::mutex csvMutex;
+
+    // Declare the helper method to open a file for writing
+    std::ofstream openFileForWriting(const std::string& filename) const;
+};
+
+} // namespace IO
+
+#endif // OUTPUTSAVER_HPP

@@ -5,6 +5,11 @@ function process_directory {
     local dir="$1"
     local extension="$2"
 
+    # Проверяем, если текущая директория - 'build', то пропускаем ее
+    if [ "$(basename "$dir")" == "build" ]; then
+        return
+    fi
+
     # Вход в директорию
     cd "$dir" || return
 
@@ -54,4 +59,3 @@ fi
 
 # Вызываем функцию для начальной директории
 process_directory . "$extension"
-
