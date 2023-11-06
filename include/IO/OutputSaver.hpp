@@ -2,10 +2,13 @@
 #define OUTPUTSAVER_HPP
 
 #include "IDataHandler.hpp"
+
 #include <fstream>
 #include <string>
 #include <vector>
 #include <mutex>
+#include <random>
+#include <iostream>
 
 namespace IO {
 
@@ -15,7 +18,9 @@ public:
     ~OutputSaver() override;
 
     std::vector<std::vector<std::string>> loadData(const std::string& filename) override;
+    static std::vector<std::vector<std::string>> convertToCSVFormat(const std::vector<long double>& data);
     void saveData(const std::vector<std::vector<std::string>>& data, const std::string& filename) override;
+    void generateTestData(const std::string& filename, size_t numberOfPaths, long double initialPrice, long double volatility, long double drift, int steps);
 
 private:
     std::string baseDir;

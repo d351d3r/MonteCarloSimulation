@@ -8,7 +8,7 @@ CMakePresets.json
 build/
 conan/
 .vscode/
-
+data/
 # Compiled Object files
 *.o
 *.obj

@@ -6,8 +6,8 @@
 namespace Analysis {
     class Visualization {
     public:
-        static void visualize(const std::vector<double>& data);
-        static void plotData(const std::vector<double>& data);    };
+        static void visualize(const std::vector<long double>& data);
+        static void plotData(const std::vector<long double>& data);    };
 }
 
 #endif // VISUALIZATION_HPP
